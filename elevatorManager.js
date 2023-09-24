@@ -17,9 +17,8 @@ class ElevatorManager {
     let availableElevators = this.elevators.filter(elevator => elevator.isAvailable());
     let closestElevator;
     let closestDistance = 2000;
+    let queuedCalls;
     
-    
-  
     // If any elevator is available and already at the requested floor, handle it immediately
     for (let elevator of availableElevators) {
       if (elevator.currentFloor === floor) {
@@ -29,15 +28,12 @@ class ElevatorManager {
     }
     
     if (availableElevators.length === 0) {
-      let queuedCalls;
+      
       // All elevators are busy; find the closest one after serving its current destination
       for (let elevator of this.elevators) {
-        let distanceToDestination = Math.abs(elevator.destinationFloor - elevator.currentFloor);
-        let distanceToRequestedFloor = Math.abs(floor - elevator.destinationFloor);
-        queuedCalls = elevator.queue.length;
-  
-        // Calculate the total distance the elevator will travel (current destination + requested floor)
-        let totalDistance = distanceToDestination + distanceToRequestedFloor;
+        
+        queuedCalls = elevator.getQueueLength();
+        let totalDistance = elevator.calculateTotalDistance(floor);
   
         if (totalDistance < closestDistance) {
           closestDistance = totalDistance;
@@ -51,25 +47,19 @@ class ElevatorManager {
           
         }
       }
-      //console.log(`minQueuedCalls is: ${this.minQueuedCalls}`);
-     
-      //this.printElevators();
-     
-      //console.log(`closest elevator queue lenght: ${closestElevator.queue.length}`)
       
-      if (closestElevator.queue.length <= this.minQueuedCalls) {
+      
+      if (closestElevator.getQueueLength() <= this.minQueuedCalls) {
         closestElevator.queueFloor(floor);
-        
-        //console.log("\n Here \n")
         console.log(`Elevator ${closestElevator.id} queued for floor ${floor}`);
         return [false, closestElevator];
       } else {
         // Choose an elevator with fewer queued calls if available
         let elevatorWithFewestCalls = this.elevators[0];
         for (let elevator of this.elevators) {
-          if (elevator.queue.length < elevatorWithFewestCalls.queue.length) {
+          if (elevator.getQueueLength() < elevatorWithFewestCalls.getQueueLength()) {
             elevatorWithFewestCalls = elevator;
-            this.minQueuedCalls = elevatorWithFewestCalls.queue.length;
+            this.minQueuedCalls = elevatorWithFewestCalls.getQueueLength();
           }
         }
        
@@ -82,7 +72,8 @@ class ElevatorManager {
     } else {
       // At least one elevator is available, call the closest available elevator
       for (let elevator of availableElevators) {
-        let distance = Math.abs(elevator.currentFloor - floor);
+        let distance = elevator.calculateDistanceToDestination(floor)
+        
         if (distance < closestDistance) {
           closestDistance = distance;
           closestElevator = elevator;

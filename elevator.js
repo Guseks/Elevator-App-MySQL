@@ -23,6 +23,20 @@ class Elevator {
     return this.status === 'idle';
   }
 
+  getQueueLength(){
+    return this.queue.length;
+  }
+
+  calculateTotalDistance(calledFloor){
+    let distanceToDestination = Math.abs(this.destinationFloor - this.currentFloor);
+    let distanceToRequestedFloor = Math.abs(calledFloor - this.destinationFloor);
+    return distanceToDestination + distanceToRequestedFloor;
+  }
+
+  calculateDistanceToDestination(calledFloor){
+    return Math.abs(elevator.currentFloor - calledFloor);
+  }
+
   //Queue a floor to move to if busy
   queueFloor(floor){
     this.queue.push(floor);
@@ -56,14 +70,10 @@ class Elevator {
   //Delay is the time it takes for the elevator to move one floor
   move() {
     
-    // Calculate the total distance between current floor and destination floor
-    const totalDistance = Math.abs(this.destinationFloor - this.currentFloor);
+    
   
     // Define the time delay for moving one floor (adjust as needed)
-    const timePerFloor = 10000; // Assuming it takes 5 seconds to move one floor
-  
-    // Calculate the total time needed for the entire journey
-    const totalTime = totalDistance * timePerFloor;
+    const timePerFloor = 10000;
   
     // Simulate elevator movement with time delay
     const moveInterval = setInterval(() => {
