@@ -21,23 +21,6 @@ router.put('/elevator/call', async (req, res)=>{
     res.status(500).json({message: "Internal server error"});
   }
   
-  
-  /*
-  const floor = req.body.floor;
-  
-  const answer = elevatorManager.callElevator(floor);
-  const elevatorAlreadyThere = answer[0];
-  const elevatorCalled = answer[1].id;
-
-  //call to callElevator(floor) returns true if available elevator already at requested floor
-  if(elevatorAlreadyThere){
-    res.send('Elevator already at that floor');
-  }
-  else {
-    res.send(`Call for elevator to floor ${floor} recieved. Elevator ${elevatorCalled}`);
-    
-  }
-  */
   res.end();
 });
 
