@@ -65,7 +65,6 @@ class ElevatorManager extends EventEmitter{
       for (let elevator of elevators){
         if (elevator.currentFloor === floor) {
           this.emit('elevator-already-there', elevator);
-          //console.log(`Elevator ${elevator.id} already at floor ${floor}`);
           return true;
         }
       }
@@ -94,7 +93,6 @@ class ElevatorManager extends EventEmitter{
       let minQueuedCalls = this.elevators[0].getQueueLength();
       let elevatorToCall;
 
-      // All elevators are busy; find the closest one after serving its current destination
       for (let elevator of this.elevators) {
         
         
@@ -122,7 +120,6 @@ class ElevatorManager extends EventEmitter{
         return elevatorToCall;
         
       } else {
-        // Choose an elevator with fewer queued calls
         
         for (let elevator of this.elevators) {
           if (elevator.getQueueLength() <= minQueuedCalls) {
@@ -131,13 +128,10 @@ class ElevatorManager extends EventEmitter{
         }
         
         return elevatorToCall;
-       
-      
       }
     }
 
 
-    
     if (isElevatorAlreadyThere(floor, idleElevators)){
       return;
     }
@@ -153,24 +147,6 @@ class ElevatorManager extends EventEmitter{
       return;
     }    
     
-  }
-
-      
-
-  updateElevatorStatus(elevatorId, status, destinationFloor){
-    this.elevators.forEach(elevator => {
-      if(elevator.id === elevatorId){
-        elevator.updateStatus(status);
-        elevator.updateDestination(destinationFloor);
-      }
-    })
-
-  }
-  getAllStatus(){
-    return this.elevators.map(elevator => elevator.status)
-  }
-  printElevators(){
-    this.elevators.forEach(elevator => console.log(elevator));
   }
   
 }
