@@ -14,6 +14,9 @@ router.get('/elevator/status', (req, res) =>{
 
 router.put('/elevator/call', (req, res)=>{
   
+  elevatorManager.handleElevatorCall(req, res);
+  
+  /*
   const floor = req.body.floor;
   
   const answer = elevatorManager.callElevator(floor);
@@ -28,7 +31,7 @@ router.put('/elevator/call', (req, res)=>{
     res.send(`Call for elevator to floor ${floor} recieved. Elevator ${elevatorCalled}`);
     
   }
-  
+  */
   res.end();
 });
 

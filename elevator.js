@@ -34,7 +34,7 @@ class Elevator {
   }
 
   calculateDistanceToDestination(calledFloor){
-    return Math.abs(elevator.currentFloor - calledFloor);
+    return Math.abs(this.currentFloor - calledFloor);
   }
 
   //Queue a floor to move to if busy
