@@ -12,9 +12,15 @@ router.get('/elevator/status', (req, res) =>{
 
 });
 
-router.put('/elevator/call', (req, res)=>{
+router.put('/elevator/call', async (req, res)=>{
+  try {
+    await elevatorManager.handleElevatorCall(req, res);  
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).json({message: "Internal server error"});
+  }
   
-  elevatorManager.handleElevatorCall(req, res);
   
   /*
   const floor = req.body.floor;
