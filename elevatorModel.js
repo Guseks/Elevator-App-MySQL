@@ -8,4 +8,5 @@ const elevatorSchema = mongoose.Schema({
   queue: [ Number ]
 }, {collection: 'elevators'});
 
-module.exports = mongoose.model('Elevator', elevatorSchema);
+const ElevatorModel = mongoose.model('Elevator', elevatorSchema);
+module.exports = ElevatorModel;
