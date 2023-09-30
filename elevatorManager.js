@@ -1,20 +1,51 @@
 const e = require("express");
 const Elevator = require("./elevator");
 const EventEmitter = require('events');
+const ElevatorModel = require('./elevatorModel');
 
 class ElevatorManager extends EventEmitter{
   constructor() {
     super();
     this.elevators = [];
+    this.isUpdating = false;
     
+    this.startUp().then(()=>{
+      console.log('ElevatorManager initialized');
+    });
     
-    //Constant to scale number of elevators connected to system
+  }
+
+  async startUp(){
+    await this.loadFromDatabase();
+  }
+
+
+  async loadFromDatabase(){
+    try {
+      const data = await ElevatorModel.find();
+      if (data.length === 0){
+        this.initializeSystem();
+      }
+      else {
+        for (const elevatorData of data){
+          const { id, currentFloor, status, destinationFloor, queue } = elevatorData;
+          this.elevators.push(new Elevator(id, currentFloor, status, destinationFloor, queue));
+        }
+      }
+    }
+    catch (error){
+      console.error('Error loading elevator data from the database:', error);
+    }
+  }
+
+  //initialize system with new elevators if no elevator data in database
+  initializeSystem(){
+    
     const numberOfElevators = 3
     for(let i=1; i <= numberOfElevators; i++){
       this.elevators.push(new Elevator(i))
-    }    
+    }
   }
-  
 
   async handleElevatorCall(req, res){
     const floor = req.body.floor;
@@ -57,7 +88,52 @@ class ElevatorManager extends EventEmitter{
     return availableElevators.length !== 0;
   }
 
-  determineElevatorToCall(floor){
+  async updateDatabase(){
+    if(!this.isUpdating){
+      this.isUpdating = true;
+
+      try {
+        for (const elevator of this.elevators){
+          const {id, currentFloor, status, destinationFloor, queue} = elevator;
+          const updateData = {currentFloor, status, destinationFloor, queue};
+          await ElevatorModel.findOneAndUpdate({id}, updateData);
+        }
+      }
+      catch (error){
+        console.error('Error when updating Database from cache: ', error);
+      }
+      this.isUpdating = false;
+    }
+  }
+
+  async updateCache(){
+    try {
+      if(!this.isUpdating){
+        this.isUpdating = true;
+        const elevatorData = await ElevatorModel.find();
+        elevatorData.forEach((elevatorDataItem, index) =>{
+          const elevator = this.elevators[index];
+          
+          //Make sure there is an elevator with that index before updating
+          if(elevator){
+            elevator.id = elevatorDataItem.id;
+            elevator.currentFloor = elevatorDataItem.currentFloor;
+            elevator.status = elevatorDataItem.status;
+            elevator.destinationFloor = elevatorDataItem.destinationFloor;
+            elevator.queue = elevatorDataItem.queue;
+          }
+        });
+      }
+      this.isUpdating = false;
+    }
+    catch (error) {
+      console.error('Error updating elevator cache: ', error);
+    }
+    
+  }
+
+  async determineElevatorToCall(floor){
+    await updateCache();
     let idleElevators = this.getAvailableElevators();
     let elevatorToCall;
 

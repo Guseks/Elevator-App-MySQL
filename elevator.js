@@ -1,10 +1,10 @@
 class Elevator {
-  constructor(id) {
+  constructor(id, currentFloor, status, destinationFloor, queue) {
     this.id = id;
-    this.currentFloor = 1;
-    this.status = 'idle'; 
-    this.destinationFloor = null; 
-    this.queue = [];
+    this.currentFloor = currentFloor || 1;
+    this.status = status || 'idle'; 
+    this.destinationFloor = destinationFloor || null; 
+    this.queue = queue || [];
   } 
 
   // Methods to update elevator variables
