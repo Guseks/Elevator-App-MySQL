@@ -12,6 +12,14 @@ class ElevatorManager extends EventEmitter{
     this.startUp().then(()=>{
       console.log('ElevatorManager initialized');
     });
+
+    this.databaseUpdateInterval = setInterval(()=>{
+      this.updateDatabase();
+    }, 10000);
+
+    this.updateCacheInterval = setInterval(()=>{
+      this.updateCache();
+    }, 10000);
     
   }
 
@@ -39,12 +47,13 @@ class ElevatorManager extends EventEmitter{
   }
 
   //initialize system with new elevators if no elevator data in database
-  initializeSystem(){
+  async initializeSystem(){
     
     const numberOfElevators = 3
     for(let i=1; i <= numberOfElevators; i++){
       this.elevators.push(new Elevator(i))
     }
+    await this.updateDatabase();
   }
 
   async handleElevatorCall(req, res){
@@ -96,7 +105,8 @@ class ElevatorManager extends EventEmitter{
         for (const elevator of this.elevators){
           const {id, currentFloor, status, destinationFloor, queue} = elevator;
           const updateData = {currentFloor, status, destinationFloor, queue};
-          await ElevatorModel.findOneAndUpdate({id}, updateData);
+          const query = {id: id};
+          await ElevatorModel.findOneAndUpdate(query, updateData);
         }
       }
       catch (error){
@@ -224,7 +234,11 @@ class ElevatorManager extends EventEmitter{
     }    
     
   }
-  
+  shutdown(){
+    clearInterval(this.databaseUpdateInterval);
+    clearInterval(this.updateCacheInterval);
+    console.log('ElevatorManager has been shut down.');
+  } 
 }
 
 module.exports = ElevatorManager;
