@@ -71,7 +71,7 @@ class ElevatorManager extends EventEmitter{
   async updateDatabase(){
     try {
       for (const elevator of this.elevators){
-        const {id, currentFloor, status, destinationFloor, queue} = elevator;
+        const {id} = elevator;
         const query = {id: id};
         const elevatorDocument = await ElevatorModel.findOneAndUpdate(query, {
           $set: {
@@ -213,7 +213,6 @@ class ElevatorManager extends EventEmitter{
 
   shutdown(){
     clearInterval(this.databaseUpdateInterval);
-    clearInterval(this.updateCacheInterval);
     console.log('ElevatorManager has been shut down.');
   } 
 }
