@@ -147,7 +147,7 @@ class ElevatorManager extends EventEmitter{
     
   }
 
-// ----------- Help methods --------------
+// ----------- Help Methods ---------------
 
   isElevatorAlreadyThere(floor, elevators){
     for (let elevator of elevators){
@@ -156,6 +156,22 @@ class ElevatorManager extends EventEmitter{
         return true;
       }
     }
+  }
+
+  getClosestAvailableElevator(floor){
+    let closestDistance = 2000;
+    let elevatorToCall;
+    // At least one elevator is available, call the closest available elevator
+    for (let elevator of this.getAvailableElevators()) {
+      let distance = elevator.calculateDistanceToDestination(floor)
+      
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        elevatorToCall = elevator;
+      }
+    }
+    return elevatorToCall;
+    
   }
 
   getClosestElevatorWithShortestQueue(floor){
@@ -201,6 +217,7 @@ class ElevatorManager extends EventEmitter{
       return elevatorToCall;
     }
   }
+
   
   getAvailableElevators(){
     return this.elevators.filter(elevator => elevator.isAvailable());
