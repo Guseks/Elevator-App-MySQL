@@ -6,6 +6,6 @@ const elevatorSchema = mongoose.Schema({
   status: String,
   destinationFloor: Number,
   queue: [ Number ]
-}, {collection: elevators});
+}, {collection: 'elevators'});
 
 module.exports = mongoose.model('Elevator', elevatorSchema);

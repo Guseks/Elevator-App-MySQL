@@ -19,7 +19,7 @@ class ElevatorManager extends EventEmitter{
 
     this.updateCacheInterval = setInterval(()=>{
       this.updateCache();
-    }, 10000);
+    }, 3000);
     
   }
 
@@ -51,9 +51,19 @@ class ElevatorManager extends EventEmitter{
     
     const numberOfElevators = 3
     for(let i=1; i <= numberOfElevators; i++){
-      this.elevators.push(new Elevator(i))
+      const elevator = new Elevator(i);
+      const elevatorDocument = new ElevatorModel({
+        id: elevator.id,
+        currentFloor: elevator.currentFloor,
+        status: elevator.status,
+        destinationFloor: elevator.destinationFloor,
+        queue: elevator.queue,
+      });
+      await elevatorDocument.save();
+      this.elevators.push(elevator);
+      
     }
-    await this.updateDatabase();
+    console.log('Database Updated after initialization');
   }
 
   async handleElevatorCall(req, res){
@@ -98,47 +108,85 @@ class ElevatorManager extends EventEmitter{
   }
 
   async updateDatabase(){
-    if(!this.isUpdating){
-      this.isUpdating = true;
+    let retryCount = 0;
+    const retryLimit = 3;
 
-      try {
-        for (const elevator of this.elevators){
-          const {id, currentFloor, status, destinationFloor, queue} = elevator;
-          const updateData = {currentFloor, status, destinationFloor, queue};
-          const query = {id: id};
-          await ElevatorModel.findOneAndUpdate(query, updateData);
+    const retryUpdateDatabase = async () => {
+      if(!this.isUpdating){
+        this.isUpdating = true;
+        
+        try {
+          for (const elevator of this.elevators){
+            const {id, currentFloor, status, destinationFloor, queue} = elevator;
+            const updateData = {currentFloor, status, destinationFloor, queue};
+            const query = {id: id};
+            await ElevatorModel.findOneAndUpdate(query, updateData);
+          }
+          this.isUpdating = false;
+          //Update complete! No need to try again
+          return;
         }
+        catch (error){
+          console.error('Error when updating Database from cache: ', error);
+        }
+        
       }
-      catch (error){
-        console.error('Error when updating Database from cache: ', error);
+      retryCount++;
+      if(retryCount < retryLimit){
+        const retryDelay = 500;
+        setTimeout(retryUpdateDatabase, retryDelay);
+        
       }
-      this.isUpdating = false;
-    }
+      else {
+        console.error('Failed to update database after 3 retries');
+      }
+    };
+  
+    
   }
 
   async updateCache(){
-    try {
-      if(!this.isUpdating){
-        this.isUpdating = true;
-        const elevatorData = await ElevatorModel.find();
-        elevatorData.forEach((elevatorDataItem, index) =>{
+    let retryCount = 0;
+    const retryLimit = 3;
+
+    const retryUpdateCache = async () => {
+      try { 
+        if(!this.isUpdating){
+
+      
+          this.isUpdating = true;
+          const elevatorData = await ElevatorModel.find();
+          elevatorData.forEach((elevatorDataItem, index) =>{
           const elevator = this.elevators[index];
+            
+            //Make sure there is an elevator with that index before updating
+            if(elevator){
+              elevator.id = elevatorDataItem.id;
+              elevator.currentFloor = elevatorDataItem.currentFloor;
+              elevator.status = elevatorDataItem.status;
+              elevator.destinationFloor = elevatorDataItem.destinationFloor;
+              elevator.queue = elevatorDataItem.queue;
+            }
+          });
+          this.isUpdating = false;
+          return;
+        }
+        retryCount++;
+        if(retryCount < retryLimit){
+          const retryDelay = 500;
+          setTimeout(retryUpdateCache, retryDelay);
           
-          //Make sure there is an elevator with that index before updating
-          if(elevator){
-            elevator.id = elevatorDataItem.id;
-            elevator.currentFloor = elevatorDataItem.currentFloor;
-            elevator.status = elevatorDataItem.status;
-            elevator.destinationFloor = elevatorDataItem.destinationFloor;
-            elevator.queue = elevatorDataItem.queue;
-          }
-        });
+        }
+        else {
+          console.error('Failed to update cache after 3 retries');
+        }
+        
       }
-      this.isUpdating = false;
-    }
-    catch (error) {
-      console.error('Error updating elevator cache: ', error);
-    }
+      catch (error) {
+        console.error('Error updating elevator cache: ', error);
+      }
+      
+    };
     
   }
 
