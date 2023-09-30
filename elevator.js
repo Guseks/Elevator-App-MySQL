@@ -73,7 +73,7 @@ class Elevator {
     
   
     // Define the time delay for moving one floor (adjust as needed)
-    const timePerFloor = 10000;
+    const timePerFloor = 12000;
   
     // Simulate elevator movement with time delay
     const moveInterval = setInterval(() => {

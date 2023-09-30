@@ -15,11 +15,11 @@ class ElevatorManager extends EventEmitter{
 
     this.databaseUpdateInterval = setInterval(()=>{
       this.updateDatabase();
-    }, 10000);
+    }, 5000);
 
     this.updateCacheInterval = setInterval(()=>{
       this.updateCache();
-    }, 3000);
+    }, 2000);
     
   }
 
@@ -39,6 +39,13 @@ class ElevatorManager extends EventEmitter{
           const { id, currentFloor, status, destinationFloor, queue } = elevatorData;
           this.elevators.push(new Elevator(id, currentFloor, status, destinationFloor, queue));
         }
+        //Making sure that elevators that were stopped in the middle of a operation
+        //can continue their movement.
+        this.elevators.forEach(elevator =>{
+          if(!elevator.isAvailable()){
+            elevator.move();
+          }
+        });
       }
     }
     catch (error){
