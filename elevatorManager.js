@@ -6,6 +6,7 @@ const ElevatorModel = require('./elevatorModel');
 class ElevatorManager extends EventEmitter{
   constructor() {
     super();
+    /*
     this.elevators = [];
     
     this.startUp().then(()=>{
@@ -15,7 +16,7 @@ class ElevatorManager extends EventEmitter{
     this.databaseUpdateInterval = setInterval(()=>{
       this.updateDatabase();
     }, 2000);
-
+    */
   }
 
   async startUp(){
@@ -68,6 +69,7 @@ class ElevatorManager extends EventEmitter{
     console.log('Database Updated after initialization');
   }
 
+  /*
   async updateDatabase(){
     try {
       for (const elevator of this.elevators){
@@ -89,7 +91,7 @@ class ElevatorManager extends EventEmitter{
     
       
   }
-
+  */
 // ------------ Code for handling elevator Calls -------------------------
 
   async handleElevatorCall(req, res){
@@ -98,9 +100,9 @@ class ElevatorManager extends EventEmitter{
     this.removeAllListeners();
     
     const elevatorResult = await new Promise((resolve, reject) => {
-      function elevatorCalledHandler(elevator) {
-        elevator.queueFloor(floor);
-        elevator.moveToNextFloor();
+      async function elevatorCalledHandler(elevator) {
+        updateElevator(elevator, floor, 'elevator-called');
+        await updateElevatorInDatabase(elevator);
         resolve({ message: 'Elevator called successfully', elevator });
       }
 
@@ -108,8 +110,9 @@ class ElevatorManager extends EventEmitter{
         resolve({message: 'Elevator already there', elevator});
       }
       
-      function elevatorQueuedHandler(elevator){
-        elevator.queueFloor(floor);
+      async function elevatorQueuedHandler(elevator){
+        updateElevator(elevator, floor, 'elevator-queued')
+        await updateElevatorInDatabase(elevator);
         resolve({message: 'Elevator queued', elevator});
       }
 
@@ -126,28 +129,86 @@ class ElevatorManager extends EventEmitter{
   }
 
   async determineElevatorToCall(floor){
-    
-    let idleElevators = this.getAvailableElevators();
-    let elevatorToCall;
+    try {
+      let elevators = await this.getAllElevators();
+      let idleElevators = this.getAvailableElevators(elevators);
+      let elevatorToCall;
 
-    if (this.isElevatorAlreadyThere(floor, idleElevators)){
-      return;
+      if (this.isElevatorAlreadyThere(floor, idleElevators)){
+        return;
+      }
+      
+      if(this.isAvailableElevators(idleElevators)){
+        elevatorToCall = this.getClosestAvailableElevator(floor, idleElevators);
+        this.emit('elevator-called', elevatorToCall);
+        return;
+      }
+      else {
+        elevatorToCall = this.getClosestElevatorWithShortestQueue(floor, elevators);
+        this.emit('elevator-queued', elevatorToCall);
+        return;
+      }
     }
-    
-    if(this.isAvailableElevators(idleElevators)){
-      elevatorToCall = this.getClosestAvailableElevator(floor);
-      this.emit('elevator-called', elevatorToCall);
-      return;
+    catch (error) {
+      console.error('Failed to determine elevator to call: ', error );
     }
-    else {
-      elevatorToCall = this.getClosestElevatorWithShortestQueue(floor);
-      this.emit('elevator-queued', elevatorToCall);
-      return;
-    }    
+        
     
   }
 
+  
 // ----------- Help Methods ---------------
+
+
+  updateElevator(elevator, newFloor, eventType){
+    if(eventType === 'elevator-called'){
+      
+      if(newFloor > elevator.currentFloor){
+        elevator.updateStatus('moving_up');
+      }
+      if(newFloor < elevator.currentFloor){
+        elevator.updateStatus('moving_down');
+      }
+      elevator.updateDestination(newFloor);
+    }
+    else if(eventType === 'elevator-queued'){
+      elevator.queueFloor(newFloor);
+    }
+  }
+
+  async updateElevatorInDatabase(elevator){
+    try {
+      const {id, currentFloor, status, destinationFloor, queue} = elevator;
+      const query = {id: id};
+      await ElevatorModel.findOneAndUpdate(query, {
+        $set: {
+          currentFloor: currentFloor,
+          status: status,
+          destinationFloor: destinationFloor,
+          queue: queue
+        }
+      });
+    }
+    catch (error){
+      console.error('Error when updating elevator in the database: ', error);
+    }
+  }
+
+  async getAllElevators(){
+    let elevators = [];
+    try {
+      const data = await ElevatorModel.find();
+      for (const elevatorData of data){
+        const { id, currentFloor, status, destinationFloor, queue } = elevatorData;
+        elevators.push(new Elevator(id, currentFloor, status, destinationFloor, queue));
+      }
+      return elevators;
+    }
+    catch (error){
+      console.error('Error when retrieving data from database: ', error);
+    }
+    
+  }
 
   isElevatorAlreadyThere(floor, elevators){
     for (let elevator of elevators){
@@ -158,11 +219,11 @@ class ElevatorManager extends EventEmitter{
     }
   }
 
-  getClosestAvailableElevator(floor){
+  getClosestAvailableElevator(floor, availableElevators){
     let closestDistance = 2000;
     let elevatorToCall;
     // At least one elevator is available, call the closest available elevator
-    for (let elevator of this.getAvailableElevators()) {
+    for (let elevator of availableElevators) {
       let distance = elevator.calculateDistanceToDestination(floor)
       
       if (distance < closestDistance) {
@@ -174,13 +235,13 @@ class ElevatorManager extends EventEmitter{
     
   }
 
-  getClosestElevatorWithShortestQueue(floor){
+  getClosestElevatorWithShortestQueue(floor, elevators){
     let closestDistance = 2000;
     let queuedCalls;
-    let minQueuedCalls = this.elevators[0].getQueueLength();
+    let minQueuedCalls = elevators[0].getQueueLength();
     let elevatorToCall;
 
-    for (let elevator of this.elevators) {
+    for (let elevator of elevators) {
       
       
       let totalDistance = elevator.calculateTotalDistance(floor);
@@ -192,7 +253,7 @@ class ElevatorManager extends EventEmitter{
       }
     }
     
-    this.elevators.forEach(elevator => {
+    elevators.forEach(elevator => {
       queuedCalls = elevator.getQueueLength();
       if(queuedCalls < minQueuedCalls){
         minQueuedCalls = queuedCalls;
@@ -208,7 +269,7 @@ class ElevatorManager extends EventEmitter{
       
     } else {
       
-      for (let elevator of this.elevators) {
+      for (let elevator of elevators) {
         if (elevator.getQueueLength() <= minQueuedCalls) {
           elevatorToCall = elevator;
         }
@@ -219,8 +280,8 @@ class ElevatorManager extends EventEmitter{
   }
 
   
-  getAvailableElevators(){
-    return this.elevators.filter(elevator => elevator.isAvailable());
+  getAvailableElevators(elevators){
+    return elevators.filter(elevator => elevator.isAvailable());
   }
 
   isAvailableElevators(availableElevators){
