@@ -101,8 +101,8 @@ class ElevatorManager extends EventEmitter{
     
     const elevatorResult = await new Promise((resolve, reject) => {
       async function elevatorCalledHandler(elevator) {
-        updateElevator(elevator, floor, 'elevator-called');
-        await updateElevatorInDatabase(elevator);
+        this.updateElevator(elevator, floor, 'elevator-called');
+        await this.updateElevatorInDatabase(elevator);
         resolve({ message: 'Elevator called successfully', elevator });
       }
 
@@ -111,8 +111,8 @@ class ElevatorManager extends EventEmitter{
       }
       
       async function elevatorQueuedHandler(elevator){
-        updateElevator(elevator, floor, 'elevator-queued')
-        await updateElevatorInDatabase(elevator);
+        this.updateElevator(elevator, floor, 'elevator-queued')
+        await this.updateElevatorInDatabase(elevator);
         resolve({message: 'Elevator queued', elevator});
       }
 
