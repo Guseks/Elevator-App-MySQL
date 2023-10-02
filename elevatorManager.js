@@ -6,92 +6,51 @@ const ElevatorModel = require('./elevatorModel');
 class ElevatorManager extends EventEmitter{
   constructor() {
     super();
-    /*
-    this.elevators = [];
+
+    this.movementInterval = setInterval(async ()=>{
+      await this.simulateElevatorMovement();
+    }, 10000);
     
-    this.startUp().then(()=>{
-      console.log('ElevatorManager initialized');
+  }
+
+  async simulateElevatorMovement(){
+    const elevators = await this.getAllElevators();
+    elevators.forEach(elevator => {
+      if(elevator.status === 'moving_up'){
+        elevator.currentFloor++;
+        this.findNextMovement(elevator);
+      }
+      if(elevator.status === 'moving_down'){
+        elevator.currentFloor--;
+        this.findNextMovement(elevator);
+      }
+      
     });
-
-    this.databaseUpdateInterval = setInterval(()=>{
-      this.updateDatabase();
-    }, 2000);
-    */
   }
 
-  async startUp(){
-    await this.loadFromDatabase();
-  }
-
-
-  async loadFromDatabase(){
-    try {
-      const data = await ElevatorModel.find();
-      if (data.length === 0){
-        this.initializeSystem();
-      }
-      else {
-        for (const elevatorData of data){
-          const { id, currentFloor, status, destinationFloor, queue } = elevatorData;
-          this.elevators.push(new Elevator(id, currentFloor, status, destinationFloor, queue));
+  async findNextMovement(elevator){
+    if(elevator.currentFloor === elevator.destinationFloor){
+      elevator.updateStatus('idle');
+      await this.updateElevatorInDatabase(elevator);
+      setTimeout(async ()=>{
+        const nextFloor = elevator.getNextQueuedFloor();
+        if(nextFloor !== undefined){
+          const status = nextFloor > elevator.currentFloor ? 'moving_up': 'moving_down';
+          elevator.updateStatus(status);
+          elevator.updateDestination(nextFloor); 
+          await this.updateElevatorInDatabase(elevator);
         }
-        //Making sure that elevators that were stopped in the middle of a operation
-        //can continue their movement.
-        this.elevators.forEach(elevator =>{
-          if(!elevator.isAvailable()){
-            elevator.move();
-          }
-        });
-      }
+      }, 3000);
+
     }
-    catch (error){
-      console.error('Error loading elevator data from the database:', error);
+    else {
+      await this.updateElevatorInDatabase(elevator);
     }
   }
 
-  //initialize system with new elevators if no elevator data in database
-  async initializeSystem(){
-    
-    const numberOfElevators = 3
-    for(let i=1; i <= numberOfElevators; i++){
-      const elevator = new Elevator(i);
-      const elevatorDocument = new ElevatorModel({
-        id: elevator.id,
-        currentFloor: elevator.currentFloor,
-        status: elevator.status,
-        destinationFloor: elevator.destinationFloor,
-        queue: elevator.queue,
-      });
-      await elevatorDocument.save();
-      this.elevators.push(elevator);
-      
-    }
-    console.log('Database Updated after initialization');
-  }
-
-  /*
-  async updateDatabase(){
-    try {
-      for (const elevator of this.elevators){
-        const {id} = elevator;
-        const query = {id: id};
-        const elevatorDocument = await ElevatorModel.findOneAndUpdate(query, {
-          $set: {
-            currentFloor: elevator.currentFloor,
-            status: elevator.status,
-            destinationFloor: elevator.destinationFloor,
-            queue: elevator.queue
-          }
-        }, {new: true});
-      }
-    }
-    catch (error){
-      console.error('Error when updating Database from cache: ', error);
-    }
-    
-      
-  }
-  */
+  
+ 
+ 
 // ------------ Code for handling elevator Calls -------------------------
 
   async handleElevatorCall(req, res){
@@ -290,7 +249,7 @@ class ElevatorManager extends EventEmitter{
 
 
   shutdown(){
-    clearInterval(this.databaseUpdateInterval);
+    clearInterval(this.movementInterval);
     console.log('ElevatorManager has been shut down.');
   } 
 }
