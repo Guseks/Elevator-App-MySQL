@@ -9,15 +9,6 @@ process.on('SIGINT', () => {
   process.exit(0); 
 });
 
-
-router.get('/elevator/status', (req, res) =>{
-  const elevatorsStatus = elevatorManager.getAllStatus();
-  res.send(elevatorsStatus);
-  
-  res.end();
-
-});
-
 router.put('/elevator/call', async (req, res)=>{
   try {
     await elevatorManager.handleElevatorCall(req, res);  
