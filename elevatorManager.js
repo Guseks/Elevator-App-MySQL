@@ -179,63 +179,17 @@ class ElevatorManager extends EventEmitter{
   }
 
   getClosestAvailableElevator(floor, availableElevators){
-    let closestDistance = 2000;
-    let elevatorToCall;
-    // At least one elevator is available, call the closest available elevator
-    for (let elevator of availableElevators) {
-      let distance = elevator.calculateDistanceToDestination(floor)
-      
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        elevatorToCall = elevator;
-      }
-    }
-    return elevatorToCall;
+   return this.findClosestElevator(floor, availableElevators);
     
   }
 
+
   getClosestElevatorWithShortestQueue(floor, elevators){
-    let closestDistance = 2000;
-    let queuedCalls;
-    let minQueuedCalls = elevators[0].getQueueLength();
-    let elevatorToCall;
 
-    for (let elevator of elevators) {
-      
-      
-      let totalDistance = elevator.calculateTotalDistance(floor);
+    const closestElevator = this.findClosestElevator(floor, elevators);
+    let minQueuedCalls = elevators.reduce((min, elevator) => Math.min(min, elevator.getQueueLength()), closestElevator.getQueueLength());
 
-      if (totalDistance < closestDistance) {
-        closestDistance = totalDistance;
-        elevatorToCall = elevator;
-        
-      }
-    }
-    
-    elevators.forEach(elevator => {
-      queuedCalls = elevator.getQueueLength();
-      if(queuedCalls < minQueuedCalls){
-        minQueuedCalls = queuedCalls;
-      }
-    });
-
-    
-    //Check the queue length of the closest elevator, see if there is a elevator with a shorter queue.
-    //Used to balance the load between elevators. 
-
-    if (elevatorToCall.getQueueLength() <= minQueuedCalls) {
-      return elevatorToCall;
-      
-    } else {
-      
-      for (let elevator of elevators) {
-        if (elevator.getQueueLength() <= minQueuedCalls) {
-          elevatorToCall = elevator;
-        }
-      }
-      
-      return elevatorToCall;
-    }
+    return elevators.find((elevator) => elevator.getQueueLength() === minQueuedCalls);
   }
 
   
@@ -245,6 +199,20 @@ class ElevatorManager extends EventEmitter{
 
   isAvailableElevators(availableElevators){
     return availableElevators.length !== 0;
+  }
+
+  findClosestElevator(floor, elevators){
+    let closestDistance = 2000;
+    let elevatorToCall;
+    for (let elevator of elevators) {    
+      let totalDistance = elevator.calculateTotalDistance(floor);
+
+      if (totalDistance < closestDistance) {
+        closestDistance = totalDistance;
+        elevatorToCall = elevator;
+      }
+    }
+    return elevatorToCall;
   }
 
 
