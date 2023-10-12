@@ -156,21 +156,27 @@ class ElevatorManager extends EventEmitter{
   }
 
   async getAllElevators(){
+    
     let elevators = [];
     try {
-      const data = await ElevatorModel.find();
-      for (const elevatorData of data){
-        const { id, currentFloor, status, destinationFloor, queue } = elevatorData;
-        elevators.push(new Elevator(id, currentFloor, status, destinationFloor, queue));
+      const getQuery = 'SELECT * FROM my_elevators';
+      const data = await dbConnection.promise().query(getQuery);
+      const elevatorArray = data[0];
+
+      
+      
+      for (const elevatorData of elevatorArray){
+        console.log(elevatorData);
+        const { elevator_id, current_floor, status, destination_floor, queue } = elevatorData;
+        elevators.push(new Elevator(elevator_id, current_floor, status, destination_floor, queue));
       }
       return elevators;
     }
     catch (error){
       console.error('Error when retrieving data from database: ', error);
     }
-    
   }
-
+    
   isElevatorAlreadyThere(floor, elevators){
     for (let elevator of elevators){
       if (elevator.currentFloor === floor) {
