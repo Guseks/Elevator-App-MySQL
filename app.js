@@ -1,10 +1,30 @@
 const express = require('express');
 const routes = require('./routes'); 
-const mongoose = require('mongoose');
-const dbPath = 'mongodb://127.0.0.1:27017/elevator-app';
+const mysql = require('mysql2');
+//const mongoose = require('mongoose');
+//const dbPath = 'mongodb://127.0.0.1:27017/elevator-app';
 
 
 //------- Setting up Database ---------------
+
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'Bankekind930602',
+  database: 'sql_elevators'
+})
+
+connection.connect((err) => {
+  if (err) {
+    console.error('Error connecting to the database: ', err);
+    return;
+  }
+  console.log('Connected to the database as ID ' + connection.threadId);
+});
+
+
+
+/*
 mongoose.connect(dbPath, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -21,7 +41,7 @@ db.once('open', () => {
 });
 
 
-
+*/
 
 // ------- Starting application ----------
 

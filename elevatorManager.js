@@ -7,10 +7,11 @@ class ElevatorManager extends EventEmitter{
   constructor() {
     super();
 
+    /*
     this.movementInterval = setInterval(async ()=>{
       await this.simulateElevatorMovement();
     }, 10000);
-    
+    */
   }
 
   async simulateElevatorMovement(){
