@@ -1,18 +1,18 @@
 const e = require("express");
 const Elevator = require("./elevator");
 const EventEmitter = require('events');
-const ElevatorModel = require('./elevatorModel');
+const ElevatorModel = require('../elevatorModel');
 const dbConnection = require('./database');
 
 class ElevatorManager extends EventEmitter{
   constructor() {
     super();
 
-    /*
+    
     this.movementInterval = setInterval(async ()=>{
       await this.simulateElevatorMovement();
     }, 10000);
-    */
+    
   }
 
   async simulateElevatorMovement(){
@@ -33,9 +33,11 @@ class ElevatorManager extends EventEmitter{
   async findNextMovement(elevator){
     if(elevator.currentFloor === elevator.destinationFloor){
       elevator.updateStatus('idle');
+      elevator.updateDestination(null);
+      
       await this.updateElevatorInDatabase(elevator);
       setTimeout(async ()=>{
-        const nextFloor = elevator.getNextQueuedFloor();
+        const nextFloor = elevator.getNextQueuedFloor();  
         if(nextFloor !== undefined){
           const status = nextFloor > elevator.currentFloor ? 'moving_up': 'moving_down';
           elevator.updateStatus(status);
@@ -140,18 +142,25 @@ class ElevatorManager extends EventEmitter{
   async updateElevatorInDatabase(elevator){
     try {
       const {id, currentFloor, status, destinationFloor, queue} = elevator;
-      const query = {id: id};
-      await ElevatorModel.findOneAndUpdate(query, {
-        $set: {
-          currentFloor: currentFloor,
-          status: status,
-          destinationFloor: destinationFloor,
-          queue: queue
-        }
-      });
-    }
+      let updateQuery = 'UPDATE my_elevators SET current_floor = ?, status = ?, destination_floor = ?'; 
+      const params =[currentFloor, status, destinationFloor]; 
+      
+      if(queue.length !== 0){
+        const queueJSON = JSON.stringify(queue);
+        updateQuery += ', queue = ?';
+        params.push(queueJSON);
+      }
+      else {
+        updateQuery += ', queue = ?';
+        params.push('[]');
+      }
+      updateQuery += ' WHERE elevator_id = ?';      
+      params.push(id);
+      
+      await dbConnection.promise().query(updateQuery, params);
+    } 
     catch (error){
-      console.error('Error when updating elevator in the database: ', error);
+      console.error('Error when updating elevator in database: ', error);
     }
   }
 
@@ -166,7 +175,6 @@ class ElevatorManager extends EventEmitter{
       
       
       for (const elevatorData of elevatorArray){
-        console.log(elevatorData);
         const { elevator_id, current_floor, status, destination_floor, queue } = elevatorData;
         elevators.push(new Elevator(elevator_id, current_floor, status, destination_floor, queue));
       }

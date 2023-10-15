@@ -1,7 +1,7 @@
 const express = require('express');
-const routes = require('./routes'); 
+const routes = require('./src/routes'); 
 
-const dbConnection = require('./database');
+const dbConnection = require('./src/database');
 
 
 //const mongoose = require('mongoose');
