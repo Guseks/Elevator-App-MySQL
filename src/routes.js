@@ -1,7 +1,6 @@
 const express = require("express");
 const ElevatorManager = require("./elevatorManager");
 const db = require('./database');
-//const dbConnection = require('./database');
 
 const router = express.Router();
 const elevatorManager = new ElevatorManager();
@@ -23,17 +22,6 @@ router.put('/elevator/call', async (req, res)=>{
   
   res.end();
 });
-    /*  
-    console.log("trying to update elevator 1");
-    const insertQuery = `UPDATE my_elevators 
-                  SET destination_floor = destination_floor + 1 
-                  WHERE elevator_id = '1'`;
-
-    dbConnection.query(insertQuery);
-    */
-                
-
-  
 
 //Sends all the elevators and their information back to the client. Used mainly for testing.
 router.get('/elevator/', async (req, res)=>{
