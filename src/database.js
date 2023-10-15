@@ -1,18 +1,50 @@
-const mysql = require('mysql2');
+const Elevator = require("./elevator");
+const dbConnection = require ('./databaseSetup');
 
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'Bankekind930602',
-  database: 'sql_elevators'
-})
-
-connection.connect((err) => {
-  if (err) {
-    console.error('Error connecting to the database: ', err);
-    return;
+async function updateElevatorInDatabase(elevator){
+  try {
+    const {id, currentFloor, status, destinationFloor, queue} = elevator;
+    let updateQuery = 'UPDATE my_elevators SET current_floor = ?, status = ?, destination_floor = ?'; 
+    const params =[currentFloor, status, destinationFloor]; 
+    
+    if(queue.length !== 0){
+      const queueJSON = JSON.stringify(queue);
+      updateQuery += ', queue = ?';
+      params.push(queueJSON);
+    }
+    else {
+      updateQuery += ', queue = ?';
+      params.push('[]');
+    }
+    updateQuery += ' WHERE elevator_id = ?';      
+    params.push(id);
+    
+    await dbConnection.promise().query(updateQuery, params);
+  } 
+  catch (error){
+    console.error('Error when updating elevator in database: ', error);
   }
-  console.log('Connected to the database as ID ' + connection.threadId);
-});
+}
 
-module.exports = connection;
+async function getAllElevators(){
+  
+  let elevators = [];
+  try {
+    const getQuery = 'SELECT * FROM my_elevators';
+    const data = await dbConnection.promise().query(getQuery);
+    const elevatorArray = data[0];
+
+    
+    
+    for (const elevatorData of elevatorArray){
+      const { elevator_id, current_floor, status, destination_floor, queue } = elevatorData;
+      elevators.push(new Elevator(elevator_id, current_floor, status, destination_floor, queue));
+    }
+    return elevators;
+  }
+  catch (error){
+    console.error('Error when retrieving data from database: ', error);
+  }
+}
+
+module.exports = {getAllElevators, updateElevatorInDatabase};

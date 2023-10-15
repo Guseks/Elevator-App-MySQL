@@ -1,6 +1,8 @@
-const Elevator = require("./elevator");
+
 const EventEmitter = require('events');
-const dbConnection = require('./database');
+const db = require('./database');
+const elevatorMovement = require('./elevatorMovement');
+
 
 class ElevatorManager extends EventEmitter{
   constructor() {
@@ -8,53 +10,12 @@ class ElevatorManager extends EventEmitter{
 
     
     this.movementInterval = setInterval(async ()=>{
-      await this.simulateElevatorMovement();
-    }, 15000);
+      await elevatorMovement.simulateElevatorMovement();
+    }, 10000);
     
   }
 
-  async simulateElevatorMovement(){
-    const elevators = await this.getAllElevators();
-    elevators.forEach(elevator => {
-      if(elevator.status === 'moving_up'){
-        elevator.currentFloor++;
-        this.findNextMovement(elevator);
-      }
-      if(elevator.status === 'moving_down'){
-        elevator.currentFloor--;
-        this.findNextMovement(elevator);
-      }
-      if(elevator.status === 'idle' && elevator.getQueueLength() !== 0){
-        this.findNextMovement(elevator);
-      }
-      
-    });
-  }
-
-  async findNextMovement(elevator){
-    if(elevator.currentFloor === elevator.destinationFloor){
-      elevator.updateStatus('idle');
-      elevator.updateDestination(null);
-      
-      await this.updateElevatorInDatabase(elevator);
-      setTimeout(async ()=>{
-        const nextFloor = elevator.getNextQueuedFloor();  
-        if(nextFloor !== undefined){
-          const status = nextFloor > elevator.currentFloor ? 'moving_up': 'moving_down';
-          elevator.updateStatus(status);
-          elevator.updateDestination(nextFloor); 
-          await this.updateElevatorInDatabase(elevator);
-        }
-      }, 1000);
-
-    }
-    else {
-      await this.updateElevatorInDatabase(elevator);
-    }
-  }
-
   
- 
  
 // ------------ Code for handling elevator Calls -------------------------
 
@@ -66,7 +27,7 @@ class ElevatorManager extends EventEmitter{
     const elevatorResult = await new Promise((resolve, reject) => {
       async function elevatorCalledHandler(elevator) {
         this.updateElevator(elevator, floor, 'elevator-called');
-        await this.updateElevatorInDatabase(elevator);
+        await db.updateElevatorInDatabase(elevator);
         resolve({ message: 'Elevator called successfully', elevator });
       }
 
@@ -76,7 +37,7 @@ class ElevatorManager extends EventEmitter{
       
       async function elevatorQueuedHandler(elevator){
         this.updateElevator(elevator, floor, 'elevator-queued')
-        await this.updateElevatorInDatabase(elevator);
+        await db.updateElevatorInDatabase(elevator);
         resolve({message: 'Elevator queued', elevator});
       }
 
@@ -94,7 +55,7 @@ class ElevatorManager extends EventEmitter{
 
   async determineElevatorToCall(floor){
     try {
-      let elevators = await this.getAllElevators();
+      let elevators = await db.getAllElevators();
       let idleElevators = this.getAvailableElevators(elevators);
       let elevatorToCall;
 
@@ -140,51 +101,7 @@ class ElevatorManager extends EventEmitter{
     }
   }
 
-  async updateElevatorInDatabase(elevator){
-    try {
-      const {id, currentFloor, status, destinationFloor, queue} = elevator;
-      let updateQuery = 'UPDATE my_elevators SET current_floor = ?, status = ?, destination_floor = ?'; 
-      const params =[currentFloor, status, destinationFloor]; 
-      
-      if(queue.length !== 0){
-        const queueJSON = JSON.stringify(queue);
-        updateQuery += ', queue = ?';
-        params.push(queueJSON);
-      }
-      else {
-        updateQuery += ', queue = ?';
-        params.push('[]');
-      }
-      updateQuery += ' WHERE elevator_id = ?';      
-      params.push(id);
-      
-      await dbConnection.promise().query(updateQuery, params);
-    } 
-    catch (error){
-      console.error('Error when updating elevator in database: ', error);
-    }
-  }
-
-  async getAllElevators(){
-    
-    let elevators = [];
-    try {
-      const getQuery = 'SELECT * FROM my_elevators';
-      const data = await dbConnection.promise().query(getQuery);
-      const elevatorArray = data[0];
-
-      
-      
-      for (const elevatorData of elevatorArray){
-        const { elevator_id, current_floor, status, destination_floor, queue } = elevatorData;
-        elevators.push(new Elevator(elevator_id, current_floor, status, destination_floor, queue));
-      }
-      return elevators;
-    }
-    catch (error){
-      console.error('Error when retrieving data from database: ', error);
-    }
-  }
+  
     
   isElevatorAlreadyThere(floor, elevators){
     for (let elevator of elevators){

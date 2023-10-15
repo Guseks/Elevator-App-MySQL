@@ -1,5 +1,6 @@
 const express = require("express");
 const ElevatorManager = require("./elevatorManager");
+const db = require('./database');
 //const dbConnection = require('./database');
 
 const router = express.Router();
@@ -36,7 +37,7 @@ router.put('/elevator/call', async (req, res)=>{
 
 //Sends all the elevators and their information back to the client. Used mainly for testing.
 router.get('/elevator/', async (req, res)=>{
-  let elevators = await elevatorManager.getAllElevators();
+  let elevators = await db.getAllElevators();
   res.send(elevators);
   res.end();
 });
