@@ -3,36 +3,6 @@ const routes = require('./src/routes');
 
 const dbConnection = require('./src/database');
 
-
-//const mongoose = require('mongoose');
-//const dbPath = 'mongodb://127.0.0.1:27017/elevator-app';
-
-
-//------- Setting up Database ---------------
-
-
-
-
-
-/*
-mongoose.connect(dbPath, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-const db = mongoose.connection;
-
-db.on('error', (error) => {
-  console.error('MongoDB connection error: ', error);
-});
-
-db.once('open', () => {
-  console.log('Connected to MongoDB');
-});
-
-
-*/
-
 // ------- Starting application ----------
 
 const app = express();
