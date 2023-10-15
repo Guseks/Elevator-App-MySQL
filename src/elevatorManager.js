@@ -9,7 +9,7 @@ class ElevatorManager extends EventEmitter{
     
     this.movementInterval = setInterval(async ()=>{
       await this.simulateElevatorMovement();
-    }, 10000);
+    }, 15000);
     
   }
 
@@ -22,6 +22,9 @@ class ElevatorManager extends EventEmitter{
       }
       if(elevator.status === 'moving_down'){
         elevator.currentFloor--;
+        this.findNextMovement(elevator);
+      }
+      if(elevator.status === 'idle' && elevator.getQueueLength() !== 0){
         this.findNextMovement(elevator);
       }
       
@@ -42,7 +45,7 @@ class ElevatorManager extends EventEmitter{
           elevator.updateDestination(nextFloor); 
           await this.updateElevatorInDatabase(elevator);
         }
-      }, 3000);
+      }, 1000);
 
     }
     else {
