@@ -1,5 +1,6 @@
 const express = require('express');
 const routes = require('./src/routes'); 
+const cors = require("cors");
 
 const dbConnection = require('./src/databaseSetup');
 
@@ -11,6 +12,8 @@ const hostname = 'localhost';
 
 //Assumes the client uses JSON format in the requests
 app.use(express.json());
+
+app.use(cors());
 
 //Mounts the router used to handle the elevator calls.
 app.use('/api', routes);
