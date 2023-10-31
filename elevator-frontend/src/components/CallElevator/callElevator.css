@@ -1,0 +1,33 @@
+.call-elevator-container {
+  height: 120px;
+  background-color: rgb(240,240,240);
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid rgb(240,240,240);
+  box-shadow: 1px 1px 1px 1px rgb(230,230,230);
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.btn {
+  font-weight: 500;
+  font-size: 20px;
+  height: 45px;
+  align-items: center;
+  display: flex;
+  padding: 10px 15px;
+}
+
+.input-container {
+  height: 45px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.form-control {
+  height: 45px;
+}
+
+
