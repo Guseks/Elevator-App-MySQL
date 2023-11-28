@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "workspaces": ["backend", "elevator-frontend"],
+  "scripts": {
+    "start": "concurrently \"cd elevator-frontend && npm start\" \"cd backend && npm start\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
