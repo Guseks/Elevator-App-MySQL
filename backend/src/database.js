@@ -1,5 +1,7 @@
 const Elevator = require("./elevator");
-const dbConnection = require ('./databaseSetup');
+const createDBConnection = require ('./databaseSetup');
+
+const dbConnection = createDBConnection();
 
 async function updateElevatorInDatabase(elevator){
   try {
@@ -47,4 +49,14 @@ async function getAllElevators(){
   }
 }
 
-module.exports = {getAllElevators, updateElevatorInDatabase};
+function shutdown(){
+  dbConnection.end((err) => {
+    if (err) {
+      console.error('Error disconnecting from MySQL:', err);
+      return;
+    }
+    console.log('Disconnected from MySQL');
+  });
+}
+
+module.exports = {getAllElevators, updateElevatorInDatabase, shutdown};

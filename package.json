@@ -1,4 +1,5 @@
 {
+  "name": "elevator-app-mysql",
   "private": true,
   "workspaces": ["backend", "elevator-frontend"],
   "scripts": {

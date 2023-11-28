@@ -2,7 +2,7 @@ const express = require('express');
 const routes = require('./src/routes'); 
 const cors = require("cors");
 
-const dbConnection = require('./src/databaseSetup');
+
 
 // ------- Starting application ----------
 
@@ -24,3 +24,4 @@ app.use('/api', routes);
 app.listen(port, hostname, () => {
   console.log(`Server is running on http://${hostname}:${port}`);
 });
+

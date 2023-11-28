@@ -6,7 +6,8 @@ const router = express.Router();
 const elevatorManager = new ElevatorManager();
 
 process.on('SIGINT', () => {
-  elevatorManager.shutdown(); 
+  elevatorManager.shutdown();
+  db.shutdown(); 
   process.exit(0); 
 });
 
