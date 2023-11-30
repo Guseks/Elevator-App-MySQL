@@ -117,6 +117,7 @@ The structure in the backend is as follows:
 backend/
 node_modules
 src/
+  createDatabase.sql
   database.js
   databaseSetup.js
   elevator.js
