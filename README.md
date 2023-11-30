@@ -20,12 +20,40 @@ Run the following command in your terminal.
 npm install
 
 ```
+
+#### Initialize Database
+Begin with installing the community server version of MySQL. Available at: `https://dev.mysql.com/downloads/mysql/`. Pick the version corresponding with your operating system and install it. During the installation process choose a password for your local MySQL databases.  
+
+Now you have to change a few details in the code to match the password you created. To do this open the files: `database.js` and `databaseSetup.js` in your code editor.  
+ Inside both of these files you will find a section of code looking like this.
+
+
+``````
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: 'Bankekind930602',
+  database: 'sql_elevators'
+})
+``````
+Here you need to change the password property in both files to the password you selected during your installation. The password for the admin user of the MySQL database on your local machine.  
+
+After doing this proceed to run the following command in your terminal window, from the project root folder, to initialize the database:
+
+``````
+node ./backend/src/databaseSetup.js
+``````
+This command runs a script file `databaseSetup.js` which initializes the database. Now you are ready to start using the application.
+
+#### Starting the application 
 After installation is complete. Start the application by running the following command in the root folder of the project in your terminal.
 
 ```bash
 # Start the application. Launches both the frontend and the backend.
 npm start
 ```
+
+
 
 ## Backend - API Endpoints
 
