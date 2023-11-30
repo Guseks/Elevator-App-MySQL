@@ -23,15 +23,13 @@ connection.connect((err) => {
       
       const sqlScript = fs.readFileSync(sqlScriptPath, 'utf8');
       const sqlStatements = sqlScript.split(";").filter((sql) => sql.trim() !== "");
-      console.log(sqlStatements);
-      
-
+  
       sqlStatements.forEach(statement => {
         connection.query(statement, (error, results) => {
           if (error) {
             console.error('Error running SQL script:', error);
           } else {
-            console.log('SQL script executed successfully:', results);
+            console.log('SQL script executed successfully!');
           }
         });
       });
