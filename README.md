@@ -1,4 +1,4 @@
-# StarWars API
+# Elevator-App-MySQL
 
 An application managing a fleet of elevators. The app is built using Node.js and utilizes MySQL for data storage. It allows tracking elevator movements, handling elevator calls, and maintaining the state of each elevator.
 
@@ -80,7 +80,7 @@ npm start
 
 ## Frontend
 
-<img src="images/frontend-overview.png" alt="Frontend Screenshot" width="850" height="400">
+<img src="Images/frontend-overview.png" alt="Frontend Screenshot" width="850" height="400">
 
 The frontend consists of two components:
 - A display of the current status of the elevators in the system
